@@ -1,4 +1,4 @@
-package org.bluo.ioc.bean;
+package org.bluo.bean;
 
 /**
  * @author boluo

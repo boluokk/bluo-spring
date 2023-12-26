@@ -1,4 +1,4 @@
-package org.bluo.ioc.content;
+package org.bluo.content;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

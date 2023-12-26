@@ -1,8 +1,10 @@
-package org.bluo.ioc.test;
+package org.bluo.test;
 
-import org.bluo.ioc.annotation.Component;
-import org.bluo.ioc.annotation.Scope;
-import org.bluo.ioc.bean.BeanPostProcessor;
+import lombok.Data;
+import org.bluo.annotation.Autowired;
+import org.bluo.annotation.Component;
+import org.bluo.annotation.Scope;
+import org.bluo.bean.BeanPostProcessor;
 
 /**
  * @author boluo
@@ -10,10 +12,14 @@ import org.bluo.ioc.bean.BeanPostProcessor;
  */
 @Component
 @Scope
+@Data
 public class OrderService implements BeanPostProcessor {
+
+    @Autowired("menuService")
+    MenuService menuService;
+
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws Exception {
-        System.out.println("pre");
         return null;
     }
 

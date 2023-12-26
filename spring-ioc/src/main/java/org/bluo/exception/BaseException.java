@@ -1,4 +1,4 @@
-package org.bluo.ioc.exception;
+package org.bluo.exception;
 
 /**
  * @author boluo

@@ -1,4 +1,4 @@
-package org.bluo.ioc.annotation;
+package org.bluo.annotation;
 
 import java.lang.annotation.*;
 
