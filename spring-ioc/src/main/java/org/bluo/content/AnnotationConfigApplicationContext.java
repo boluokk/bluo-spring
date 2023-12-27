@@ -30,6 +30,23 @@ public class AnnotationConfigApplicationContext implements ApplicationContext {
 
     public AnnotationConfigApplicationContext(Class<?> configClass) {
         this.configClass = configClass;
+        this.refresh();
+    }
+
+    public AnnotationConfigApplicationContext(String packageBaseName) {
+        this();
+        try {
+            this.configClass = Thread.currentThread().getContextClassLoader().loadClass(packageBaseName);
+            this.refresh();
+        } catch (ClassNotFoundException e) {
+            log.error("包不存在");
+        }
+    }
+
+    public AnnotationConfigApplicationContext() {
+    }
+
+    public void refresh() {
         // 扫描
         doScan(configClass);
         // 注册
@@ -37,6 +54,7 @@ public class AnnotationConfigApplicationContext implements ApplicationContext {
         // 实例化
         initializeBean();
     }
+
 
     private void initializeBean() {
         // 实例化
@@ -129,15 +147,15 @@ public class AnnotationConfigApplicationContext implements ApplicationContext {
 
     private void doRegister() {
         for (File file : classFiles) {
-            String fileName = file.getName();
+            String filePath = file.getAbsolutePath().replace("\\", ".");
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            if (fileName.endsWith(".class")) {
-                String className = packageBaseName + "." + fileName.substring(0, fileName.lastIndexOf("."));
+            if (filePath.endsWith(".class")) {
+                String className = filePath.substring(filePath.indexOf(packageBaseName), filePath.lastIndexOf("."));
                 try {
                     Class<?> beanClass = classLoader.loadClass(className);
-                    if (beanClass.isAnnotationPresent(Component.class)) {
-                        Component component = beanClass.getAnnotation(Component.class);
+                    if (!beanClass.isAnnotation() && beanClass.isAnnotationPresent(Component.class)) {
                         BeanDefinition beanDefinition = new BeanDefinition();
+                        Component component = beanClass.getAnnotation(Component.class);
                         if (ObjectUtil.isNotNull(beanClass.getAnnotation(Scope.class))) {
                             Scope scope = beanClass.getAnnotation(Scope.class);
                             beanDefinition.setScope(scope.value());
@@ -179,12 +197,18 @@ public class AnnotationConfigApplicationContext implements ApplicationContext {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         String path = packageBaseName.replace(".", "/");
         File file = new File(classLoader.getResource(path).getFile());
-        if (file.exists()) {
-            File[] files = file.listFiles();
+        processDirectory(file);
+    }
+
+    private void processDirectory(File directory) {
+        if (directory.exists()) {
+            File[] files = directory.listFiles();
             if (ObjectUtil.isNotNull(files)) {
                 for (File f : files) {
                     if (f.isFile()) {
                         classFiles.add(f);
+                    } else if (f.isDirectory()) {
+                        processDirectory(f); // 递归处理子目录
                     }
                 }
             }
@@ -212,5 +236,9 @@ public class AnnotationConfigApplicationContext implements ApplicationContext {
             }
         }
         return null;
+    }
+
+    public List<Object> getAllBean() {
+        return new ArrayList<>(singletonObjects.values());
     }
 }
