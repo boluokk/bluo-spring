@@ -1,6 +1,7 @@
 package org.bluo.springmvc.content;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.bluo.content.AnnotationConfigApplicationContext;
 import org.bluo.springmvc.annotation.RequestMapping;
@@ -75,7 +76,23 @@ public class DispatcherServlet extends HttpServlet {
                     }
                 }
 
-                method.invoke(handleInvocation.getController(), params);
+                Object invoke = method.invoke(handleInvocation.getController(), params);
+
+                // 默认直接json返回
+                if (invoke instanceof String) {
+                    resp.setContentType("application/json;charset=utf-8");
+                    PrintWriter writer = resp.getWriter();
+                    writer.write(invoke.toString());
+                    writer.flush();
+                    writer.close();
+                } else {
+                    String jsonStr = JSONUtil.toJsonStr(invoke);
+                    resp.setContentType("application/json;charset=utf-8");
+                    PrintWriter writer = resp.getWriter();
+                    writer.write(jsonStr);
+                    writer.flush();
+                    writer.close();
+                }
             } catch (Exception e) {
                 log.error("invoke error", e);
             }
@@ -91,24 +108,6 @@ public class DispatcherServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         this.doPost(req, resp);
-    }
-
-    public Object parseBaseType(Class<?> parameterTypes, Object value) {
-        if (parameterTypes.isAssignableFrom(String.class)) {
-            return value.toString();
-        } else if (parameterTypes.isAssignableFrom(Integer.class)) {
-            return Integer.parseInt(value.toString());
-        } else if (parameterTypes.isAssignableFrom(Long.class)) {
-            return Long.parseLong(value.toString());
-        } else if (parameterTypes.isAssignableFrom(Double.class)) {
-            return Double.parseDouble(value.toString());
-        } else if (parameterTypes.isAssignableFrom(Float.class)) {
-            return Float.parseFloat(value.toString());
-        } else if (parameterTypes.isAssignableFrom(Boolean.class)) {
-            return Boolean.parseBoolean(value.toString());
-        } else {
-            return value;
-        }
     }
 
     private Object getDefaultParameterValue(Class<?> parameterType) {
